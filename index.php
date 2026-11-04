@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/app/bootstrap.php';
 
 $posts = db()->query(
-    "SELECT p.id, p.title, p.slug, p.body, p.cover_image, p.published_at, c.name AS category_name, c.slug AS category_slug, a.name AS author_name
+    "SELECT p.id, p.title, p.slug, p.body, p.excerpt, p.cover_image, p.published_at, c.name AS category_name, c.slug AS category_slug, a.name AS author_name
      FROM posts p
      JOIN categories c ON c.id = p.category_id
      JOIN admins a ON a.id = p.author_id
@@ -44,7 +44,7 @@ page_header('Latest posts');
       <div class="post-card-content">
         <a class="eyebrow" href="<?= e(site_url('category.php?slug=' . rawurlencode($post['category_slug']))) ?>"><?= e($post['category_name']) ?></a>
         <h2><a href="<?= e(site_url('post.php?slug=' . rawurlencode($post['slug']))) ?>"><?= e($post['title']) ?></a></h2>
-        <p><?= e(excerpt($post['body'])) ?></p>
+        <p><?= e($post['excerpt'] ?: excerpt($post['body'])) ?></p>
         <div class="post-meta"><?= e($post['author_name']) ?> · <?= e(date('M j, Y', strtotime($post['published_at']))) ?></div>
       </div>
     </article>

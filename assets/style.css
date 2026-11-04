@@ -75,6 +75,9 @@ input:focus, textarea:focus, select:focus { outline: 3px solid #23734b26; border
 .panel { margin-bottom: 24px; padding: 24px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .panel-heading h2, .panel-heading p { margin: 0; }
+.filter-form { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0 0 18px; }
+.filter-form label { color: var(--muted); font-size: .9rem; font-weight: 650; }
+.filter-form select { width: auto; min-width: 150px; }
 .stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
 .stat-card { display: grid; gap: 8px; padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .stat-card span { color: var(--muted); font-size: .9rem; }

@@ -12,23 +12,19 @@ if (!$post) {
 }
 $categories = db()->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
 $errors = [];
-$values = ['title' => $post['title'], 'slug' => $post['slug'], 'category_id' => (string)$post['category_id'], 'body' => $post['body'], 'status' => $post['status']];
+$values = ['title' => $post['title'], 'category_id' => (string)$post['category_id'], 'excerpt' => $post['excerpt'] ?? '', 'body' => $post['body'], 'status' => $post['status']];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
-    $slugInput = trim((string)($_POST['slug'] ?? ''));
-    if ($slugInput === '') {
-        $slugInput = (string)($_POST['title'] ?? '');
-    }
     $values = [
         'title' => trim((string)($_POST['title'] ?? '')),
-        'slug' => slugify($slugInput),
         'category_id' => (string)($_POST['category_id'] ?? ''),
+        'excerpt' => trim((string)($_POST['excerpt'] ?? '')),
         'body' => trim((string)($_POST['body'] ?? '')),
         'status' => (string)($_POST['status'] ?? 'draft'),
     ];
     if ($values['title'] === '' || mb_strlen($values['title'], 'UTF-8') > 240) $errors[] = 'Title is required and must be 240 characters or fewer.';
-    if ($values['slug'] === '' || mb_strlen($values['slug'], 'UTF-8') > 260) $errors[] = 'Slug is required and must be 260 characters or fewer.';
+    if (mb_strlen($values['excerpt'], 'UTF-8') > 500) $errors[] = 'Excerpt must be 500 characters or fewer.';
     if ($values['body'] === '') $errors[] = 'Post content is required.';
     if (!in_array($values['status'], ['draft', 'published'], true)) $errors[] = 'Choose a valid post status.';
     $categoryCheck = db()->prepare('SELECT COUNT(*) FROM categories WHERE id = ?');
@@ -47,12 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if (!$errors) {
-        $publishedAt = $values['status'] === 'published'
-            ? ($post['published_at'] ?: date('Y-m-d H:i:s'))
-            : null;
+        $slug = unique_post_slug(db(), $values['title'], (int)$id);
         try {
-            $update = db()->prepare('UPDATE posts SET category_id = ?, title = ?, slug = ?, body = ?, status = ?, cover_image = ?, published_at = ? WHERE id = ?');
-            $update->execute([(int)$values['category_id'], $values['title'], $values['slug'], $values['body'], $values['status'], $cover, $publishedAt, $id]);
+            $update = db()->prepare("UPDATE posts SET category_id = ?, title = ?, slug = ?, excerpt = ?, body = ?, status = ?, cover_image = ?, published_at = CASE WHEN ? = 'published' THEN COALESCE(published_at, NOW()) ELSE NULL END WHERE id = ?");
+            $update->execute([(int)$values['category_id'], $values['title'], $slug, $values['excerpt'] ?: null, $values['body'], $values['status'], $cover, $values['status'], $id]);
         } catch (Throwable $exception) {
             if ($cover !== $post['cover_image']) {
                 remove_cover_image($cover);
