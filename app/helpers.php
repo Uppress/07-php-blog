@@ -23,12 +23,31 @@ function site_url(string $path = ''): string
     return ($base === '/' ? '' : $base) . '/' . ltrim($path, '/');
 }
 
-function slugify(string $text): string
+function slugify(string $title): string
 {
-    $text = trim(mb_strtolower($text, 'UTF-8'));
+    $text = trim(mb_strtolower($title, 'UTF-8'));
     $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text) ?: $text;
     $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($text)) ?? '';
     return trim($slug, '-') ?: 'item';
+}
+
+function unique_post_slug(PDO $pdo, string $title, ?int $excludeId = null): string
+{
+    $base = slugify($title);
+    $candidate = $base;
+    $suffix = 2;
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) FROM posts WHERE slug = ?' . ($excludeId === null ? '' : ' AND id <> ?')
+    );
+
+    while (true) {
+        $params = $excludeId === null ? [$candidate] : [$candidate, $excludeId];
+        $stmt->execute($params);
+        if ((int)$stmt->fetchColumn() === 0) {
+            return $candidate;
+        }
+        $candidate = $base . '-' . $suffix++;
+    }
 }
 
 function excerpt(string $text, int $length = 180): string
@@ -45,14 +64,17 @@ function save_cover_image(array $file): string
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
         throw new RuntimeException('The cover image could not be uploaded.');
     }
-    if ($file['size'] > 5 * 1024 * 1024 || $file['size'] <= 0) {
-        throw new RuntimeException('Cover images must be no larger than 5 MB.');
+    if (!isset($file['tmp_name'], $file['size']) || !is_uploaded_file($file['tmp_name'])) {
+        throw new RuntimeException('The cover image upload is invalid.');
+    }
+    if ($file['size'] > 2 * 1024 * 1024 || $file['size'] <= 0) {
+        throw new RuntimeException('Cover images must be no larger than 2 MB.');
     }
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = $finfo->file($file['tmp_name']);
-    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
-    if (!isset($extensions[$mime]) || getimagesize($file['tmp_name']) === false) {
-        throw new RuntimeException('Use a valid JPEG, PNG, GIF, or WebP image.');
+    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    if (!isset($extensions[$mime]) || @getimagesize($file['tmp_name']) === false) {
+        throw new RuntimeException('Use a valid JPEG, PNG, or WebP image.');
     }
     $name = bin2hex(random_bytes(16)) . '.' . $extensions[$mime];
     $directory = dirname(__DIR__) . '/uploads';
