@@ -98,6 +98,73 @@ function remove_cover_image(?string $filename): void
     }
 }
 
+function post_url(string $slug): string
+{
+    return site_url('post/' . rawurlencode($slug));
+}
+
+function category_url(string $slug): string
+{
+    return site_url('category/' . rawurlencode($slug));
+}
+
+function render_post_card(array $post): void
+{
+    ?>
+    <article class="post-card">
+      <?php if (!empty($post['cover_image'])): ?>
+        <a href="<?= e(post_url($post['slug'])) ?>" tabindex="-1" aria-hidden="true">
+          <img class="post-cover" src="<?= e(site_url('uploads/' . rawurlencode($post['cover_image']))) ?>" alt="" loading="lazy">
+        </a>
+      <?php endif; ?>
+      <div class="post-card-content">
+        <?php if (!empty($post['category_name']) && !empty($post['category_slug'])): ?>
+          <a class="eyebrow" href="<?= e(category_url($post['category_slug'])) ?>"><?= e($post['category_name']) ?></a>
+        <?php endif; ?>
+        <h2><a href="<?= e(post_url($post['slug'])) ?>"><?= e($post['title']) ?></a></h2>
+        <p><?= e($post['excerpt'] ?: excerpt($post['body'])) ?></p>
+        <div class="post-meta">
+          <?php if (!empty($post['author_name'])): ?><?= e($post['author_name']) ?> · <?php endif; ?>
+          <?= e(date('M j, Y', strtotime($post['published_at']))) ?>
+        </div>
+      </div>
+    </article>
+    <?php
+}
+
+function render_pagination(int $page, int $totalPages, string $baseUrl): void
+{
+    if ($totalPages < 2) {
+        return;
+    }
+    ?>
+    <nav class="pagination" aria-label="Pagination">
+      <?php if ($page > 1): ?>
+        <a rel="prev" href="<?= e($baseUrl . '?page=' . ($page - 1)) ?>">← Newer</a>
+      <?php else: ?>
+        <span class="pagination-disabled">← Newer</span>
+      <?php endif; ?>
+      <span>Page <?= $page ?> of <?= $totalPages ?></span>
+      <?php if ($page < $totalPages): ?>
+        <a rel="next" href="<?= e($baseUrl . '?page=' . ($page + 1)) ?>">Older →</a>
+      <?php else: ?>
+        <span class="pagination-disabled">Older →</span>
+      <?php endif; ?>
+    </nav>
+    <?php
+}
+
+function render_post_body(string $body): void
+{
+    $paragraphs = preg_split('/(?:\r\n|\r|\n)\s*(?:\r\n|\r|\n)/', trim($body)) ?: [];
+    foreach ($paragraphs as $paragraph) {
+        $paragraph = trim($paragraph);
+        if ($paragraph !== '') {
+            echo '<p>' . nl2br(e($paragraph), false) . '</p>';
+        }
+    }
+}
+
 function page_header(string $title): void
 {
     ?><!doctype html>

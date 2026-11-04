@@ -2,3 +2,11 @@ Options -Indexes
 <Files "database.sql">
     Require all denied
 </Files>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /swd/07-php-blog/
+
+    RewriteRule ^post/([^/]+)/?$ post.php?slug=$1 [B,L,QSA]
+    RewriteRule ^category/([^/]+)/?$ category.php?slug=$1 [B,L,QSA]
+</IfModule>

@@ -16,7 +16,7 @@ A PHP 8 and MySQL blog CMS for `http://localhost/swd/07-php-blog/`.
    Enter a password of at least 12 characters when prompted. The script refuses to create another admin once one exists.
 5. Open `http://localhost/swd/07-php-blog/` and use **Admin** to sign in.
 
-The web server must allow `.htaccess` overrides for the app directory protection and upload execution restrictions. Uploaded covers are limited to JPEG, PNG, or WebP images up to 2 MB.
+The web server must allow `.htaccess` overrides and have Apache's `mod_rewrite` enabled for the app directory protection, upload execution restrictions, and clean post/category URLs. Uploaded covers are limited to JPEG, PNG, or WebP images up to 2 MB.
 
 If upgrading a database created before post excerpts were added, run this once:
 
@@ -27,5 +27,6 @@ ALTER TABLE posts ADD COLUMN excerpt VARCHAR(500) NULL AFTER slug;
 ## Features
 
 - Public post, category, and full-text search pages.
+- Responsive public pages with pagination, related stories, reading-time estimates, and safe paragraph rendering.
 - Admin sign-in, session expiration, CSRF protection, and post/category CRUD.
 - Draft and published post states; only published posts appear publicly.
