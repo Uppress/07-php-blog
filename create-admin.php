@@ -43,6 +43,9 @@ try {
     $pdo->commit();
     fwrite(STDOUT, "Admin created for {$email}.\n");
 } catch (Throwable $exception) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     fwrite(STDERR, "Unable to create admin: " . $exception->getMessage() . "\n");
     exit(1);
 }

@@ -1,4 +1,7 @@
-Options -Indexes
+Options -Indexes -ExecCGI
+<FilesMatch ".*">
+    SetHandler default-handler
+</FilesMatch>
 <FilesMatch "\.(?i:php|php\d*|phtml|phar|pht|phtm)$">
     Require all denied
 </FilesMatch>

@@ -1,4 +1,3 @@
-<?php
 <form class="panel form-panel" method="post" enctype="multipart/form-data">
   <?= csrf_field() ?>
   <div class="form-grid">
